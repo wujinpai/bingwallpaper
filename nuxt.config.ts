@@ -30,7 +30,8 @@ export default defineNuxtConfig({
   },
 
   site: {
-    url: `${env.NUXT_SITE_URL}`,
+    // 部署平台必须配置该环境变量，否则 sitemap / robots 会生成 undefined 域名
+    url: env.NUXT_SITE_URL || 'http://localhost:3000',
   },
 
   sitemap: {

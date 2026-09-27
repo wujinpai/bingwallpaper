@@ -4,6 +4,7 @@
 .nitro
 .cache
 dist
+.edgeone
 
 # Node dependencies
 node_modules

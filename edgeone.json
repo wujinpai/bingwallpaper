@@ -1,0 +1,8 @@
+{
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "pnpm build",
+  "nodeVersion": "22.11.0",
+  "nodeFunctionsConfig": {
+    "maxDuration": 60
+  }
+}

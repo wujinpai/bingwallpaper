@@ -14,23 +14,47 @@ jobs:
   update-archive:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - name: Fetch Updates from API
+          node-version: 22
+
+      # 直连 Bing 抓取，不依赖线上站点是否可用
+      - name: Fetch latest wallpapers from Bing
         run: node scripts/update-archive.mjs
-        env:
-          API_ENDPOINT: ${{ vars.API_ENDPOINT }}
-      - name: Commit Updates to Github
-        if: success()
+
+      - name: Commit archive changes
+        id: commit
         env:
           USER_NAME: ${{ vars.USER_NAME }}
           USER_EMAIL: ${{ vars.USER_EMAIL }}
         run: |
-          git config user.name $USER_NAME
-          git config user.email $USER_EMAIL
+          # 未配置 USER_NAME / USER_EMAIL 时回退到 GitHub Actions 机器人身份，保证开箱可用
+          git config user.name "${USER_NAME:-github-actions[bot]}"
+          git config user.email "${USER_EMAIL:-41898282+github-actions[bot]@users.noreply.github.com}"
           git status --short
+
+          if [ -z "$(git status --porcelain ./archive)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "archive is already up to date"
+            exit 0
+          fi
+
           git add ./archive
-          git commit --allow-empty -m "ci: update archive $(date --iso-8601=seconds)"
+          git commit -m "ci: update archive $(date --iso-8601=seconds)"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # 与 EdgeOne 的 Git 自动部署二选一，避免同一次更新触发两次构建。
+      # 未配置 EDGEONE_DEPLOY_HOOK 时此步骤自动跳过，交由 Git 集成部署。
+      - name: Trigger EdgeOne Pages deploy
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          DEPLOY_HOOK: ${{ secrets.EDGEONE_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "EDGEONE_DEPLOY_HOOK is not set, leave deployment to the EdgeOne Git integration"
+            exit 0
+          fi
+          curl -fsS -X POST "$DEPLOY_HOOK"
