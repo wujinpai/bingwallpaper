@@ -51,7 +51,7 @@ flowchart LR
 | 框架预设 | Nuxt | 平台自动识别 |
 | 安装命令 | `pnpm install --no-frozen-lockfile` | 由 `edgeone.json` 覆盖 |
 | 构建命令 | `pnpm build`（即 `nuxt build`） | 由 `edgeone.json` 覆盖，**必须是 build 而非 generate** |
-| Node 版本 | `22.11.0` | 由 `edgeone.json` 覆盖，EdgeOne 预装版本之一 |
+| Node 版本 | `22.17.1` | 由 `edgeone.json` 覆盖，**必须 ≥ 22.12.0**，见下方注意事项 10 |
 | 函数超时 | 60 秒 | 由 `edgeone.json` 覆盖，供 `/api/updates` 拉取 9 个市场使用 |
 
 如果控制台里的「安装命令 / 构建命令 / Node 版本」与上表不一致，请手动改成一致，或直接依赖 `edgeone.json`。
@@ -87,16 +87,16 @@ flowchart LR
 {
   "installCommand": "pnpm install --no-frozen-lockfile",
   "buildCommand": "pnpm build",
-  "nodeVersion": "22.11.0",
-  "nodeFunctionsConfig": {
+  "nodeVersion": "22.17.1",
+  "cloudFunctions": {
     "maxDuration": 60
   }
 }
 ```
 
 - 用 `--no-frozen-lockfile` 而非默认的 `pnpm install`：升级依赖后锁文件可能与 `package.json` 短暂不同步，此参数可避免构建因锁文件校验失败。
-- `nodeVersion` 必须是 EdgeOne 预装版本（`14.21.3 / 16.20.2 / 18.20.4 / 20.18.0 / 22.11.0` 等），否则可能部署失败。
-- `nodeFunctionsConfig.maxDuration` 取值范围 10–120 秒（默认 30），本案用于 `/api/updates`（会串行请求 9 个市场的 Bing 接口）。
+- `nodeVersion` **必须是 ≥ 22.12.0 的预装版本**（可选 `22.17.1 / 22.21.1 / 24.5.0 / 24.11.0 / 24.18.0`）。**不要用 `22.11.0`**：Nuxt 3.21 依赖的 `oxc-parser` 原生绑定要求 `^20.19.0 || >=22.12.0`，低于该版本时 pnpm 会把可选依赖跳过，导致 `nuxt prepare` 报 `Cannot find native binding`。
+- `cloudFunctions.maxDuration` 取值范围 10–120 秒（默认 30），本案用于 `/api/updates`（会串行请求 9 个市场的 Bing 接口）。旧字段名 `nodeFunctionsConfig` 已废弃，仅会打印一条 deprecation 警告。
 
 ### `nuxt.config.ts`
 
@@ -125,9 +125,10 @@ flowchart LR
 7. **Fork 后需手动启用 Actions**，见「第 5 步」。
 8. **GitHub Actions 需要写权限**：工作流已声明 `permissions: contents: write` 才能 push 归档提交。若你的仓库策略限制了默认 Token 权限，请在 **Settings → Actions → General → Workflow permissions** 选择 *Read and write permissions*。
 9. **EdgeOne 对 Nuxt 的能力边界**：官方支持 Nuxt SSR / SSG / ISR，但 **不支持 Nuxt Layer**，`@nuxt/image` 的图片优化也不支持（本项目均未使用）。
-10. **Nuxt 版本要求**：EdgeOne Pages 要求 Nuxt `>= 3.16.0`，本项目使用 `3.21.11`，升级依赖时请勿降级。
-11. **依赖兼容性**：UnoCSS 需 `66.x` 以兼容 Nuxt 3.21 所依赖的 Vite 7；若自行升级 Nuxt，请同步核对 UnoCSS 版本。
-12. **首次访问 `/api/updates` 可能较慢**：它会实时请求 Bing 的 9 个市场接口。站点主流程（`/api/image`、`/api/images`）读取的是本地归档，响应很快，不受影响。
+10. **Node 版本必须 ≥ 22.12.0**（`edgeone.json` 已设为 `22.17.1`）。这是最容易踩的坑：EdgeOne 默认的 `22.11.0` 低于 Nuxt 3.21 依赖的 `oxc-parser` 原生绑定所要求的 `^20.19.0 || >=22.12.0`，pnpm 会因此跳过这些可选依赖，构建时在 `nuxt prepare` 阶段报 `Cannot find native binding`。若你在控制台手动指定过 Node 版本，请同步改成 `22.17.1` 或更高。
+11. **Nuxt 版本要求**：EdgeOne Pages 要求 Nuxt `>= 3.16.0`，本项目使用 `3.21.11`，升级依赖时请勿降级。
+12. **依赖兼容性**：UnoCSS 需 `66.x` 以兼容 Nuxt 3.21 所依赖的 Vite 7；若自行升级 Nuxt，请同步核对 UnoCSS 版本。
+13. **首次访问 `/api/updates` 可能较慢**：它会实时请求 Bing 的 9 个市场接口。站点主流程（`/api/image`、`/api/images`）读取的是本地归档，响应很快，不受影响。
 
 ## 🧑‍💻 本地开发
 
@@ -148,6 +149,7 @@ node scripts/update-archive.mjs   # 手动抓取壁纸到 archive/
 
 ## ❓常见问题
 
+- **安装依赖失败：`Cannot find native binding ... oxc-parser`** → Node 版本过低（EdgeOne 默认 `22.11.0`）。把 Node 版本改为 `22.17.1` 或更高后重新部署，详见注意事项 10。
 - **页面正常但 `robots.txt` 里域名是 `localhost`** → 未配置 `NUXT_SITE_URL` 或配置后未重新部署。
 - **构建失败，提示锁文件不一致** → `edgeone.json` 已使用 `--no-frozen-lockfile`；若仍在控制台手动指定了安装命令，请去掉 `--frozen-lockfile`。
 - **归档有更新但线上没变** → 归档更新后没有触发重新构建，或同时开启了 Git 集成与钩子导致构建被跳过/重复。
