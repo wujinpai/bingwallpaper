@@ -52,8 +52,6 @@ useCustomSeoMeta({
           <h1 class="font-bold">
             {{ market.title }}
           </h1>
-          <span class="mx-1 hidden sm:inline">-</span>
-          <span class="hidden sm:inline">{{ market.description }}</span>
         </div>
 
         <market-select />
