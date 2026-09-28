@@ -115,4 +115,4 @@ export const markets: MarketConfig[] = [
 
 export const allMkt: string[] = markets.map(m => m.lang)
 
-export const defaultMarket = markets.find(m => m.lang === 'en-US')!
+export const defaultMarket = markets.find(m => m.lang === 'zh-CN')!
