@@ -54,7 +54,6 @@ useCustomSeoMeta({
           </h1>
         </div>
 
-        <market-select />
 
         <div class="ml-auto" />
 
