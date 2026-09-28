@@ -173,7 +173,7 @@ async function downloadImage(item: { url: string, label: string, filename: strin
                 <span>{{ previewImage?.title }}</span>
                 <nuxt-link
                   v-if="previewImage?.copyrightlink" class="i-logos-bing mb--3px ml-1 inline-block"
-                  target="_blank" :to="previewImage?.copyrightlink" tabindex="-1" title="Search in Bing"
+                  target="_blank" :to="previewImage?.copyrightlink" tabindex="-1" title="在 Bing 中搜索"
                 />
               </h2>
               <p class="mb-1 text-sm leading-relaxed op-50">

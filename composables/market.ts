@@ -3,18 +3,9 @@ import { defaultMarket, markets } from '~/config/market'
 export function useMarket() {
   const route = useRoute()
 
+  // 默认使用简体中文，仅在显式传入 ?mkt= 时切换语言
   const market = computed(() => {
-    let mkt: string = ''
-
-    if (route.query.mkt)
-      mkt = route.query.mkt as string
-
-    else if (import.meta.server)
-      mkt = useRequestHeaders(['accept-language'])['accept-language']?.split(',')[0] || 'en-US'
-
-    else if (import.meta.client)
-      mkt = (navigator.language ?? 'en-US')
-
+    const mkt = route.query.mkt as string | undefined
     return markets.find(m => m.lang === mkt) || defaultMarket
   })
 

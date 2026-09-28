@@ -115,4 +115,5 @@ export const markets: MarketConfig[] = [
 
 export const allMkt: string[] = markets.map(m => m.lang)
 
+// 站点默认语言：简体中文
 export const defaultMarket = markets.find(m => m.lang === 'zh-CN')!

@@ -12,8 +12,9 @@ export function isAllowedMkt(mkt: string): mkt is Market {
 }
 
 export function useValidMarket(event: H3Event) {
-  let mkt = getQuery<{ mkt: string }>(event).mkt || getHeader(event, 'accept-language')?.split(',')[0] || defaultMarket.lang
-  if (!isAllowedMkt(mkt))
-    mkt = defaultMarket.lang
-  return markets.find(m => m.lang === mkt)!
+  // 默认使用简体中文，仅在显式传入 ?mkt= 时切换语言
+  const mkt = getQuery<{ mkt?: string }>(event).mkt
+  if (mkt && isAllowedMkt(mkt))
+    return markets.find(m => m.lang === mkt)!
+  return defaultMarket
 }
