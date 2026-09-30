@@ -1,3 +1,5 @@
 <template>
-  <nuxt-page page-key="dummy" />
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>

@@ -1,7 +1,23 @@
 :root {
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-  --un-default-border-color: rgba(255, 255, 255, 0.3);
+  --c-primary: #8b3dff;
+  --c-primary-dark: #7634d9;
+  --c-secondary: #595d69;
+  --c-ink: #191a1f;
+  --c-light: #f7f8f9;
+  --c-danger: #d6293e;
+  --c-warning: #f7c32e;
+  --c-success: #0cbc87;
+  --c-info: #4f9ef8;
+  --un-default-border-color: rgba(25, 26, 31, 0.12);
+}
+
+html,
+body {
+  background-color: #fff;
+  color: var(--c-ink);
+  font-family: 'PingFangSC-Regular', 'PingFang SC', 'Microsoft Yahei-Regular', 'Microsoft Yahei', Rubik, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
 }
 
 ::-webkit-scrollbar {
@@ -15,15 +31,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-    --un-default-border-color: rgba(255, 255, 255, 0.1);
-  }
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .scrollbar-none {
@@ -33,4 +41,40 @@
 
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+/* 卡片底部黑色渐变遮罩，用于叠加白色标题 */
+.overlay-bottom::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.78) 100%);
+  pointer-events: none;
+}
+
+.text-shadow-lg {
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+}
+
+.snap-x-mandatory {
+  scroll-snap-type: x mandatory;
+}
+
+.snap-start-item {
+  scroll-snap-align: start;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.45s ease both;
 }

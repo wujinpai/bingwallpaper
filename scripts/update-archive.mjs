@@ -15,8 +15,8 @@ const MARKETS = [
 
 const BING_ENDPOINT = 'https://global.bing.com/HPImageArchive.aspx'
 
-async function fetchMarketImage(mkt) {
-  const query = new URLSearchParams({ format: 'js', n: '1', idx: '0', mkt })
+async function fetchMarketImage(mkt, idx = 0) {
+  const query = new URLSearchParams({ format: 'js', n: '1', idx: String(idx), mkt })
   const response = await fetch(`${BING_ENDPOINT}?${query}`)
 
   if (!response.ok)
@@ -67,14 +67,17 @@ function updateFiles(updates) {
   console.log(`# ${added} new image(s) written to archive`)
 }
 
-const results = await Promise.allSettled(MARKETS.map(mkt => fetchMarketImage(mkt)))
+// idx=0 取当日壁纸；idx=-1 尝试取 Bing 已提前发布的次日壁纸（用于首页「未来预览」，
+// 若 Bing 还没发布，返回的会是当日图，与归档重复会被自动跳过）
+const tasks = MARKETS.flatMap(mkt => [{ mkt, idx: 0 }, { mkt, idx: -1 }])
+const results = await Promise.allSettled(tasks.map(task => fetchMarketImage(task.mkt, task.idx)))
 
 const updates = []
 for (const [index, result] of results.entries()) {
   if (result.status === 'fulfilled')
     updates.push(...result.value)
   else
-    console.error(`? ${MARKETS[index]} failed: ${result.reason?.message ?? result.reason}`)
+    console.error(`? ${tasks[index].mkt} (idx=${tasks[index].idx}) failed: ${result.reason?.message ?? result.reason}`)
 }
 
 if (updates.length === 0) {

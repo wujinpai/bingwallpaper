@@ -1,34 +1,24 @@
 <script setup lang="ts">
-const props = defineProps<{ src: string, alt: string }>()
+defineOptions({ inheritAttrs: false })
 
-const imageUrl = ref('')
-const loading = ref(true)
+defineProps<{ src: string, alt?: string }>()
 
-function loadImage(src: string) {
-  loading.value = true
-  imageUrl.value = ''
+const el = ref<HTMLImageElement>()
+const loaded = ref(false)
 
-  setTimeout(
-    () => {
-      imageUrl.value = src
-      loading.value = false
-    },
-    800,
-  )
-}
-
-watch(() => props.src, loadImage)
-
+// 图片可能在 hydration 之前就加载完成，此时不会再触发 load 事件
 onMounted(() => {
-  loadImage(props.src)
+  if (el.value?.complete)
+    loaded.value = true
 })
 </script>
 
 <template>
-  <div class="grid h-full w-full place-items-center of-hidden">
-    <div v-if="loading">
-      <span class="i-system-uicons-loader block animate-spin text-3xl" />
-    </div>
-    <img v-else :src="imageUrl" :alt="alt" class="h-full w-full object-cover">
-  </div>
+  <img
+    ref="el" v-bind="$attrs" :src="src" :alt="alt" loading="lazy" decoding="async"
+    class="h-full w-full object-cover transition-opacity duration-500"
+    :class="loaded ? 'op-100' : 'op-0'"
+    @load="loaded = true"
+    @error="loaded = true"
+  >
 </template>

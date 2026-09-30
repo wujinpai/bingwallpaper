@@ -8,7 +8,6 @@ export default defineNuxtConfig({
   modules: [
     '@vueuse/nuxt',
     '@unocss/nuxt',
-    'nuxt-gtag',
     '@nuxtjs/sitemap',
     'nuxt-simple-robots',
   ],
@@ -23,10 +22,6 @@ export default defineNuxtConfig({
       baseName: 'archive',
       dir: resolve(cwd(), 'archive'),
     }],
-  },
-
-  gtag: {
-    id: 'G-YR2YHJVK0Q',
   },
 
   site: {

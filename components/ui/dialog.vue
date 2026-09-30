@@ -62,12 +62,12 @@ useEventListener('keydown', (e) => {
         v-if="isVIf" v-show="isVShow" ref="elDialogRoot" data-scope="dialog-root"
         class="scrollbar-none fixed inset-0 of-y-auto overscroll-none" :style="{ zIndex }"
       >
-        <div class="absolute inset-0 z-0 touch-none backdrop-blur" data-part="dialog-mask" />
-        <div class="absolute inset-0 z-0 h-[calc(100%+0.5px)] bg-black:24" data-part="dialog-mask" @click="clickMask" />
-        <div class="pointer-events-none absolute inset-0 z-1 grid place-items-center p-safe-area">
+        <div class="fixed inset-0 z-0 touch-none backdrop-blur" data-part="dialog-mask" />
+        <div class="fixed inset-0 z-0 bg-black:24" data-part="dialog-mask" @click="clickMask" />
+        <div class="pointer-events-none relative z-1 flex min-h-full items-center justify-center p-safe-area">
           <div
             v-bind="$attrs" ref="elDialogContent" data-part="dialog-content"
-            class="pointer-events-auto relative isolate touch-pan-x touch-pan-y overflow-hidden of-y-auto overscroll-contain border-1 rounded bg-white:12 p-2 shadow"
+            class="pointer-events-auto relative isolate touch-pan-x touch-pan-y of-y-auto overscroll-contain rounded bg-white shadow"
           >
             <slot />
           </div>

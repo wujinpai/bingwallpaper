@@ -1,77 +1,88 @@
 <script setup lang="ts">
-const { height: windowHeight, width: windowWidth } = useWindowSize()
-const { y: scrollY, x: scrollX } = useWindowScroll({ behavior: 'smooth' })
+const { height: windowHeight } = useWindowSize()
+const { y: scrollY } = useWindowScroll()
 
-provide('isMobile', computed(() => {
-  return windowWidth.value < 730
-}))
+const { data: home } = await useFetch('/api/home', { key: 'home' })
 
-const isBackTopVisible = computed(() => {
-  return scrollY.value > windowHeight.value * 0.5
+const { loadStats } = useStats()
+
+// 「随机美图」在 SSR 已给出一张，挂载后再换一张，保证每次刷新都不一样
+const randomImage = ref(home.value?.random ?? null)
+
+onMounted(async () => {
+  loadStats()
+
+  try {
+    const image = await $fetch('/api/random', { query: { exclude: home.value?.today?.url } })
+    if (image)
+      randomImage.value = image
+  }
+  catch {
+    // 保持 SSR 给出的那张
+  }
 })
 
-function scrollTo({ x = 0, y = 0 }: { x?: number, y?: number } = {}) {
-  scrollX.value = x
-  scrollY.value = y
+const isBackTopVisible = computed(() => scrollY.value > windowHeight.value * 0.5)
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 const requestUrl = useRequestURL()
 const { market } = useMarket()
 
 useHead({
-  htmlAttrs: {
-    lang: market.value.lang,
-  },
+  htmlAttrs: { lang: market.value.lang },
   link: [
     { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-    { rel: 'canonical', href: `${requestUrl.toString()}` },
+    { rel: 'canonical', href: requestUrl.toString() },
   ],
   meta: [
     { name: 'keywords', content: market.value.keywords },
     { name: 'viewport', content: 'width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover' },
-    { name: 'theme-color', content: 'black' },
-    { name: 'apple-mobile-web-app-capable', content: 'yes' },
-    { name: 'apple-mobile-web-app-status-bar-style', content: 'black' },
+    { name: 'theme-color', content: '#8B3DFF' },
   ],
 })
 
 useCustomSeoMeta({
-  title: market.value.title,
+  title: `${market.value.title} · 必应每日一图`,
   description: market.value.description,
   ogUrl: requestUrl.toString(),
-  ogImage: `${requestUrl.origin}/og.jpeg`,
+  ogImage: home.value?.today?.url || `${requestUrl.origin}/og.jpeg`,
 })
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col gap-1 md:gap-2">
-    <header class="sticky top-0 z-10 mx-1 border-b-1 rounded-b px-4 py-2 shadow backdrop-blur md:mx-4 bg-base">
-      <div class="flex items-center">
-        <div class="i-logos-bing mt--1 text-2xl" />
-        <div class="mx-1 flex items-center">
-          <h1 class="font-bold">
-            {{ market.title }}
-          </h1>
-        </div>
+  <div class="pb-2">
+    <template v-if="home">
+      <HeroSection
+        :today="home.today"
+        :spotlight="home.spotlight"
+        :random="randomImage"
+        :next="home.next"
+        :last-year="home.lastYear"
+      />
 
+      <TimelineSection :items="home.timeline" />
 
-        <div class="ml-auto" />
+      <WallpaperSection />
 
-        <button
-          v-show="isBackTopVisible" class="rounded-full p-2 text-2xl hover:bg-black:10"
-          @click="() => scrollTo({ y: 0 })"
-        >
-          <div class="i-system-uicons-arrow-up-circle m--2px text-28px" />
-        </button>
+      <PopularSection :latest="home.latest" />
+    </template>
 
-      </div>
-    </header>
+    <div v-else class="container-page py-20 text-center text-secondary">
+      正在加载必应壁纸…
+    </div>
 
-    <image-grid />
-    <image-preview />
+    <ImagePreview />
 
-    <footer class="py-4 text-center bg-base">
-      <span class="text-xs op-50">© {{ new Date().getFullYear() }} · 本站所有图片均来自 Bing 搜索</span>
-    </footer>
+    <button
+      v-show="isBackTopVisible"
+      class="icon-btn fixed bottom-6 right-6 z-30 bg-white shadow-lg"
+      title="回到顶部"
+      @click="scrollToTop"
+    >
+      <i class="i-system-uicons-arrow-up-circle" />
+    </button>
   </div>
 </template>
