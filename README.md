@@ -1,15 +1,14 @@
 # Bing Wallpaper Archive
 
-基于 Nuxt 3 的必应每日壁纸归档站，支持多语言市场、多种分辨率，内置定时自动抓取与更新。本站已适配 **腾讯云 EdgeOne Pages** 部署。
+基于 Nuxt 3 的必应每日壁纸归档站，仅简体中文（`zh-CN`）市场，内置定时自动抓取与更新。本站已适配 **腾讯云 EdgeOne Pages** 部署。
 
 - ⚒️ Nuxt 3 + EdgeOne Pages
 - 🔄 GitHub Actions 定时抓取 Bing 官方接口并写入仓库归档
-- 🇺🇳 9 个市场：`de-DE` / `en-CA` / `en-GB` / `en-IN` / `en-US` / `fr-FR` / `it-IT` / `ja-JP` / `zh-CN`
+- 🇨🇳 仅简体中文市场（`zh-CN`）
 
 ## ✨ 特性
 
 - [x] 🔄 每日自动更新（GitHub Actions 定时任务）
-- [x] 🇺🇳 多语言市场支持
 - [x] 🏞️ 多种分辨率
 - [x] ⚡ SSR 首屏直出 + 服务端缓存，SEO 友好（`sitemap.xml` / `robots.txt` 自动生成）
 
@@ -17,7 +16,7 @@
 
 ```mermaid
 flowchart LR
-  A["Bing HPImageArchive API<br/>(global.bing.com)"] -->|定时抓取 09 个市场| B["GitHub Actions<br/>(update-archive.yml)"]
+  A["Bing HPImageArchive API<br/>(global.bing.com)"] -->|定时抓取 zh-CN| B["GitHub Actions<br/>(update-archive.yml)"]
   B -->|写入 archive/*.json| C["Git 提交 & push"]
   C -->|Git 集成自动部署| D["EdgeOne Pages<br/>构建 pnpm build"]
   D -->|archive 打包进 server bundle| E["线上站点<br/>SSR + /api 路由"]
@@ -25,6 +24,8 @@ flowchart LR
 
 关键点：**归档数据（`archive/`）在构建时被打包进服务端产物**（Nitro `serverAssets`）。
 因此 `archive/` 一旦有更新，必须触发一次**重新构建**，线上才会生效。
+只留 `zh-CN` 一个市场后，一天只有一张新图，一天只会 push 一次、构建一次——
+此前 9 个市场在不同时区换日，两次定时各抓到一批新图、各推一次，才会一天构建两次。
 
 ## 🚀 部署到 EdgeOne Pages
 
@@ -52,7 +53,7 @@ flowchart LR
 | 安装命令 | `pnpm install --no-frozen-lockfile` | 由 `edgeone.json` 覆盖 |
 | 构建命令 | `pnpm build`（即 `nuxt build`） | 由 `edgeone.json` 覆盖，**必须是 build 而非 generate** |
 | Node 版本 | `22.17.1` | 由 `edgeone.json` 覆盖，**必须 ≥ 22.12.0**，见下方注意事项 10 |
-| 函数超时 | 60 秒 | 由 `edgeone.json` 覆盖，供 `/api/updates` 拉取 9 个市场使用 |
+| 函数超时 | 60 秒 | 由 `edgeone.json` 覆盖，供 `/api/updates` 拉取 zh-CN 使用 |
 
 如果控制台里的「安装命令 / 构建命令 / Node 版本」与上表不一致，请手动改成一致，或直接依赖 `edgeone.json`。
 
@@ -96,7 +97,7 @@ flowchart LR
 
 - 用 `--no-frozen-lockfile` 而非默认的 `pnpm install`：升级依赖后锁文件可能与 `package.json` 短暂不同步，此参数可避免构建因锁文件校验失败。
 - `nodeVersion` **必须是 ≥ 22.12.0 的预装版本**（可选 `22.17.1 / 22.21.1 / 24.5.0 / 24.11.0 / 24.18.0`）。**不要用 `22.11.0`**：Nuxt 3.21 依赖的 `oxc-parser` 原生绑定要求 `^20.19.0 || >=22.12.0`，低于该版本时 pnpm 会把可选依赖跳过，导致 `nuxt prepare` 报 `Cannot find native binding`。
-- `cloudFunctions.maxDuration` 取值范围 10–120 秒（默认 30），本案用于 `/api/updates`（会串行请求 9 个市场的 Bing 接口）。旧字段名 `nodeFunctionsConfig` 已废弃，仅会打印一条 deprecation 警告。
+- `cloudFunctions.maxDuration` 取值范围 10–120 秒（默认 30），本案用于 `/api/updates`（请求 zh-CN 的 Bing 接口）。旧字段名 `nodeFunctionsConfig` 已废弃，仅会打印一条 deprecation 警告。
 
 ### `nuxt.config.ts`
 
@@ -106,7 +107,7 @@ flowchart LR
 ### `.github/workflows/update-archive.yml`
 
 - 触发方式：定时（UTC `10:39` 与 `18:39`，对应北京时间 `18:39` 与次日 `02:39`）+ 手动 `workflow_dispatch`。
-- 抓取脚本：`scripts/update-archive.mjs`，直连 `https://global.bing.com/HPImageArchive.aspx`，不依赖线上站点。
+- 抓取脚本：`scripts/update-archive.mjs`，直连 `https://global.bing.com/HPImageArchive.aspx`，不依赖线上站点。只拉取 `zh-CN` 一个市场。
 - 仅当 `archive/` 有实际变化时才提交（幂等），无更新则跳过，不产生空提交。
 - 提交身份默认回退为 GitHub Actions 机器人；如需自定义，在仓库 **Settings → Secrets and variables → Actions → Variables** 添加 `USER_NAME` / `USER_EMAIL`（注意是 Variables，不是 Secrets）。
 - 部署触发二选一（下方详述）：默认用 **EdgeOne 的 Git 自动部署**；也可选配 **部署钩子**。
@@ -128,7 +129,7 @@ flowchart LR
 10. **Node 版本必须 ≥ 22.12.0**（`edgeone.json` 已设为 `22.17.1`）。这是最容易踩的坑：EdgeOne 默认的 `22.11.0` 低于 Nuxt 3.21 依赖的 `oxc-parser` 原生绑定所要求的 `^20.19.0 || >=22.12.0`，pnpm 会因此跳过这些可选依赖，构建时在 `nuxt prepare` 阶段报 `Cannot find native binding`。若你在控制台手动指定过 Node 版本，请同步改成 `22.17.1` 或更高。
 11. **Nuxt 版本要求**：EdgeOne Pages 要求 Nuxt `>= 3.16.0`，本项目使用 `3.21.11`，升级依赖时请勿降级。
 12. **依赖兼容性**：UnoCSS 需 `66.x` 以兼容 Nuxt 3.21 所依赖的 Vite 7；若自行升级 Nuxt，请同步核对 UnoCSS 版本。
-13. **首次访问 `/api/updates` 可能较慢**：它会实时请求 Bing 的 9 个市场接口。站点主流程（`/api/image`、`/api/images`）读取的是本地归档，响应很快，不受影响。
+13. **首次访问 `/api/updates` 可能较慢**：它会实时请求 Bing 的 zh-CN 接口。站点主流程（`/api/image`、`/api/images`）读取的是本地归档，响应很快，不受影响。
 
 ## 🧑‍💻 本地开发
 

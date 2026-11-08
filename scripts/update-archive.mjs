@@ -2,14 +2,6 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { exit } from 'node:process'
 
 const MARKETS = [
-  'de-DE',
-  'en-CA',
-  'en-GB',
-  'en-IN',
-  'en-US',
-  'fr-FR',
-  'it-IT',
-  'ja-JP',
   'zh-CN',
 ]
 
