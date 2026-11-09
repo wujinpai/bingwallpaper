@@ -24,7 +24,7 @@ jobs:
           node-version: 22
 
       # 直连 Bing 抓取，不依赖线上站点是否可用
-      - name: Fetch latest wallpapers from Bing
+      - name: Fetch latest wallpaper from Bing
         run: node scripts/update-archive.mjs
 
       - name: Commit archive changes
@@ -49,15 +49,7 @@ jobs:
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      # 与 EdgeOne 的 Git 自动部署二选一，避免同一次更新触发两次构建。
-      # 未配置 EDGEONE_DEPLOY_HOOK 时此步骤自动跳过，交由 Git 集成部署。
-      - name: Trigger EdgeOne Pages deploy
-        if: steps.commit.outputs.changed == 'true'
-        env:
-          DEPLOY_HOOK: ${{ secrets.EDGEONE_DEPLOY_HOOK }}
-        run: |
-          if [ -z "$DEPLOY_HOOK" ]; then
-            echo "EDGEONE_DEPLOY_HOOK is not set, leave deployment to the EdgeOne Git integration"
-            exit 0
-          fi
-          curl -fsS -X POST "$DEPLOY_HOOK"
+      # 构建校验：确认新数据能正常生成整站。.output/ 不提交，
+      # 线上部署由 EdgeOne Pages 的 Git 集成在 push 后自动构建。
+      - name: Verify site builds
+        run: node scripts/build.mjs

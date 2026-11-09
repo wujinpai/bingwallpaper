@@ -1,4 +1,7 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+// 每日抓取 Bing 壁纸（仅 zh-CN），写入 archive/zh-CN/<YYYYMM>.json。
+// 由 GitHub Actions 定时运行（见 .github/workflows/update-archive.yml）。
+// 用法：node scripts/update-archive.mjs（在项目根目录运行）
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { exit } from 'node:process'
 
 const MARKETS = [
@@ -34,7 +37,7 @@ function updateFiles(updates) {
     const { lang, ...data } = update
 
     const key = data.date.replaceAll('-', '')
-    const filepath = `archive/${lang}/${key.slice(0, 6)}.json`
+    const filepath = `archive/zh-CN/${key.slice(0, 6)}.json`
 
     const group = existsSync(filepath)
       ? JSON.parse(readFileSync(filepath, 'utf-8'))
@@ -47,6 +50,7 @@ function updateFiles(updates) {
       console.warn(`! ${key} already exists`)
     }
     else {
+      mkdirSync('archive/zh-CN', { recursive: true })
       group[key] = data
       added += 1
       console.log(`+ ${key} added`)
