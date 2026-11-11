@@ -375,7 +375,7 @@ all.forEach((w, i) => {
 
 // 样式与图标
 copyFileSync(join(ROOT, 'styles.css'), join(DIST, 'styles.css'));
-for (const f of ['logo.svg', 'favicon.svg', 'favicon.png', 'apple-touch-icon.png']) {
+for (const f of ['logo.svg', 'favicon.svg', 'favicon.png', 'apple-touch-icon.png', '681e774932fc7fc7913adc91d4c1dc4d.txt']) {
   copyFileSync(join(ROOT, f), join(DIST, f));
 }
 
