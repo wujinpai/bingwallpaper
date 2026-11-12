@@ -34,8 +34,8 @@ python3 -m http.server -d .output  # 本地预览
 
 ## 自动更新（GitHub Actions）
 
-`.github/workflows/update-archive.yml` 每天两次（UTC 10:15 / 18:15，即北京 18:15 / 次日 02:15）
+`.github/workflows/update-archive.yml` 每天两次（UTC 17:00 / 21:00，即北京次日 01:00 / 05:00）
 跑 `scripts/update-archive.mjs` 抓当日 zh-CN 壁纸写进 `archive/zh-CN/`，有新图就提交推送；
 推送后由 EdgeOne Pages 的 Git 集成自动重新构建部署。工作流里另有一步跑
 `node scripts/build.mjs` 做构建校验。只留一个市场，一天只有一张新图，
-一天只会推送一次、构建一次，两次定时是冗余（某次没抓到，另一次补上）。
+一天只会推送一次、构建一次，两次定时是冗余：第一趟 01:00 抓，官方还没更新就由第二趟 05:00 补上（某次网络失败没抓到，另一次也会补上）。
