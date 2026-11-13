@@ -95,6 +95,9 @@
   --ambient-filter: blur(48px) brightness(1.12) saturate(1.1);
 }
 html, body { margin: 0; padding: 0; }
+/* 微信内置浏览器会按用户在微信里设的字号缩放网页文字，进页面时先按默认字号渲染再突然放大，
+   布局跟着一跳就是“弹射放大”。固定 100% 让微信别缩放，按设计字号渲染。 */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   color: var(--text);
