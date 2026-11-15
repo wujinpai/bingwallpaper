@@ -329,20 +329,20 @@ function apiDocPage() {
 <h1>API 接口文档</h1>
 <p class="api-lead">每日最新壁纸的公开接口，无需鉴权，可直接在浏览器或代码里调用。</p>
 <h2>获取当日最新壁纸</h2>
-<pre><code>GET ${SITE_URL}/api</code></pre>
+<pre><code>GET <a href="${SITE_URL}/api" target="_blank" rel="noopener">${SITE_URL}/api</a></code></pre>
 <h2>指定壁纸尺寸</h2>
 <p>用 <code>size</code> 参数指定要哪个尺寸，不传默认桌面（1920×1080）。中文名也接受。</p>
-<pre><code>GET ${SITE_URL}/api?size=4k
-GET ${SITE_URL}/api?size=phone
-GET ${SITE_URL}/api?size=手机</code></pre>
+<pre><code>GET <a href="${SITE_URL}/api?size=4k" target="_blank" rel="noopener">${SITE_URL}/api?size=4k</a>
+GET <a href="${SITE_URL}/api?size=phone" target="_blank" rel="noopener">${SITE_URL}/api?size=phone</a>
+GET <a href="${SITE_URL}/api?size=手机" target="_blank" rel="noopener">${SITE_URL}/api?size=手机</a></code></pre>
 <table class="api-table">
 <thead><tr><th>size</th><th>尺寸</th><th>分辨率</th><th>今日是否可用</th></tr></thead>
 <tbody>${sizeRows}</tbody>
 </table>
 <h2>直接显示壁纸（图片直链）</h2>
 <p>默认返回 JSON；要直接在浏览器里看图、或把地址当壁纸源、<code>&lt;img&gt;</code> 地址用，加 <code>format=image</code>，接口会 302 跳到所选尺寸的图片直链。</p>
-<pre><code>GET ${SITE_URL}/api?size=4k&amp;format=image
-GET ${SITE_URL}/api?size=phone&amp;format=image</code></pre>
+<pre><code>GET <a href="${SITE_URL}/api?size=4k&amp;format=image" target="_blank" rel="noopener">${SITE_URL}/api?size=4k&amp;format=image</a>
+GET <a href="${SITE_URL}/api?size=phone&amp;format=image" target="_blank" rel="noopener">${SITE_URL}/api?size=phone&amp;format=image</a></code></pre>
 <h2>返回示例</h2>
 <p>返回 JSON；顶层 <code>url</code> 即所选尺寸的图片直链，<code>sizes</code> 里是全部可用尺寸。</p>
 <pre><code>${esc(JSON.stringify(sample, null, 2))}</code></pre>
