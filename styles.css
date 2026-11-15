@@ -151,6 +151,30 @@ img { display: block; }
 .theme-toggle:hover { background: var(--link-soft-bg); }
 .theme-toggle svg { width: 20px; height: 20px; display: block; }
 .theme-toggle .icon-sun { display: none; }
+/* 顶栏 API 入口：扁平小字链接，与日夜按钮同一行 */
+.api-link {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  padding: 6px 10px; border-radius: 8px;
+}
+.api-link:hover { background: var(--link-soft-bg); text-decoration: none; }
+
+/* API 接口文档页 */
+.api-doc { max-width: 860px; }
+.api-doc h1 { font-size: 26px; margin: 28px 0 8px; }
+.api-doc h2 { font-size: 19px; margin: 28px 0 10px; }
+.api-doc p, .api-doc li { line-height: 1.8; }
+.api-doc .api-lead { color: var(--muted); font-size: 15px; }
+.api-doc pre {
+  background: var(--card); border: 1px solid var(--topbar-border); border-radius: 10px;
+  padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.6;
+}
+.api-doc code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.api-doc pre code { font-size: 13px; }
+.api-doc .api-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+.api-doc .api-table th, .api-doc .api-table td {
+  text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--topbar-border);
+}
+.api-doc .api-table th { color: var(--muted); font-weight: 600; }
 
 /* 大图卡（首页 hero / 列表页 hero） */
 .hero { margin-top: 20px; }
@@ -311,6 +335,8 @@ img { display: block; }
 @media (max-width: 720px) {
   /* 手机端内容铺满全宽：去掉左右留白，卡片直角贴边，不再像几个分开的盒子 */
   .container { padding: 0; }
+  /* 文档页是正文不是卡片，手机端也要留左右边距，别贴边 */
+  .container.api-doc { padding: 0 20px; }
   .hero { margin-top: 0; }
   .hero-card { border-radius: 0; box-shadow: none; }
   .section { border-radius: 0; box-shadow: none; }

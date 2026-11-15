@@ -78,6 +78,28 @@ function downloads(w) {
   }
   return list;
 }
+// API 尺寸表：键名即 /api?size= 接受的值（另接受中文 label 作别名）
+// 4K 的 UHD 实测为 3840×2160；商标版为带 Bing 商标的 1920×1200
+const SIZE_DEFS = {
+  phone: { label: '手机', width: 1080, height: 1920 },
+  desktop: { label: '桌面', width: 1920, height: 1080 },
+  laptop: { label: '笔记本', width: 1366, height: 768 },
+  hd: { label: 'HD', width: 1280, height: 720 },
+  '4k': { label: '4K', width: 3840, height: 2160 },
+  trademark: { label: '商标', width: 1920, height: 1200 },
+};
+// 某张图可用的全部尺寸（键名 → {url, width, height}，url 为本站绝对地址）
+// bimg.cc 老图只有桌面一档，sizes 里就只有 desktop，/api 请求别的尺寸会回落到桌面。
+function apiSizes(w) {
+  const byLabel = {};
+  for (const d of downloads(w)) byLabel[d.label] = d.url;
+  const sizes = {};
+  for (const [key, def] of Object.entries(SIZE_DEFS)) {
+    const rel = byLabel[def.label];
+    if (rel) sizes[key] = { url: SITE_URL + rel, width: def.width, height: def.height };
+  }
+  return sizes;
+}
 const dlBar = w => `<div class="dl-bar">${downloads(w).map(d =>
   `<a href="${esc(d.url)}" target="_blank" rel="noopener">${d.label}</a>`).join('')}</div>`;
 
@@ -132,11 +154,7 @@ function thisWeek(w) {
 }
 
 // ---------- 模板 ----------
-const TO_TOP = `<button id="toTop" class="to-top" aria-label="回到顶部" title="回到顶部">↑</button>
-<script>(function(){var b=document.getElementById('toTop');if(!b)return;
-var onScroll=function(){b.classList.toggle('show',window.scrollY>600);};
-window.addEventListener('scroll',onScroll,{passive:true});onScroll();
-b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});})();</script>`;
+const TO_TOP = `<button id="toTop" class="to-top" aria-label="回到顶部" title="回到顶部">↑</button>`;
 function shell({ title, desc, ambient, body }) {
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -159,7 +177,7 @@ function shell({ title, desc, ambient, body }) {
 <div class="ambient-veil"></div>
 <header class="topbar"><div class="topbar-inner">
 <a class="brand" href="/"><img class="brand-logo" src="/logo.svg" alt="每日必应壁纸"><span class="brand-name">${SITE_NAME}</span></a>
-<div class="topbar-right"><button class="theme-toggle" id="themeToggle" type="button" aria-label="切换深色/浅色主题"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button></div>
+<div class="topbar-right"><button class="theme-toggle" id="themeToggle" type="button" aria-label="切换深色/浅色主题"><svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button><a class="api-link" href="/api.html">API</a></div>
 </div></header>
 ${body}
 <footer class="footer">
@@ -167,42 +185,7 @@ ${body}
 <div>数据每日从 Bing 官方接口拉取更新</div>
 </footer>
 ${TO_TOP}
-<script>
-(function(){
-  var btn=document.getElementById('themeToggle');
-  if(!btn)return;
-  var sun=btn.querySelector('.icon-sun'), moon=btn.querySelector('.icon-moon');
-  function current(){
-    var t=document.documentElement.getAttribute('data-theme');
-    if(t==='light'||t==='dark')return t;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
-  }
-  function setIcon(theme){
-    // 亮色显示月亮（点按切深色），深色显示太阳（点按切浅色）
-    if(sun)sun.style.display=theme==='dark'?'block':'none';
-    if(moon)moon.style.display=theme==='dark'?'none':'block';
-  }
-  function setThemeColor(theme){
-    var c=theme==='dark'?'#0f172a':'#e9eef3';
-    document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){
-      m.setAttribute('content',c); m.removeAttribute('media');
-    });
-  }
-  function apply(theme){
-    document.documentElement.setAttribute('data-theme',theme);
-    try{localStorage.setItem('theme',theme);}catch(e){}
-    setIcon(theme); setThemeColor(theme);
-  }
-  btn.addEventListener('click',function(){
-    apply(current()==='dark'?'light':'dark');
-  });
-  // 初次：有保存的选择就按保存的来并同步图标/浏览器 chrome 颜色，否则跟随系统
-  var saved=null;
-  try{saved=localStorage.getItem('theme');}catch(e){}
-  if(saved==='light'||saved==='dark'){ setIcon(saved); setThemeColor(saved); }
-  else setIcon(current());
-})();
-</script>
+<script src="/app.js" defer></script>
 </body>
 </html>
 `;
@@ -323,9 +306,54 @@ ${next ? `<a href="/view/${next.id}.html">明日壁纸 ›</a>` : '<span>明日�
 <div class="view-title">${esc(w.title)}</div>
 <div class="view-meta">${fmtDate(w.date)}<br>${esc(w.copyright)}</div>
 </div>
+<script src="/app.js" defer></script>
 </body>
 </html>
 `;
+}
+
+// API 接口文档页（/api.html）：示例用今日真实数据
+function apiDocPage() {
+  const sizes = apiSizes(TODAY);
+  const sizeRows = Object.entries(SIZE_DEFS).map(([key, def]) => {
+    const ok = sizes[key];
+    return `<tr><td><code>${key}</code></td><td>${def.label}</td><td>${def.width} × ${def.height}</td><td>${ok ? '✓' : '—（今日无此尺寸，回落到桌面）'}</td></tr>`;
+  }).join('');
+  const sample = {
+    date: TODAY.date, title: TODAY.title, copyright: TODAY.copyright,
+    copyrightlink: TODAY.copyrightlink, detail: `${SITE_URL}/bing/${TODAY.id}.html`,
+    url: (sizes.desktop || {}).url, size: 'desktop',
+    width: 1920, height: 1080, sizes,
+  };
+  const body = `<main class="container api-doc">
+<h1>API 接口文档</h1>
+<p class="api-lead">每日最新壁纸的公开接口，无需鉴权，可直接在浏览器或代码里调用。</p>
+<h2>获取当日最新壁纸</h2>
+<pre><code>GET ${SITE_URL}/api</code></pre>
+<h2>指定壁纸尺寸</h2>
+<p>用 <code>size</code> 参数指定要哪个尺寸，不传默认桌面（1920×1080）。中文名也接受。</p>
+<pre><code>GET ${SITE_URL}/api?size=4k
+GET ${SITE_URL}/api?size=phone
+GET ${SITE_URL}/api?size=手机</code></pre>
+<table class="api-table">
+<thead><tr><th>size</th><th>尺寸</th><th>分辨率</th><th>今日是否可用</th></tr></thead>
+<tbody>${sizeRows}</tbody>
+</table>
+<h2>直接显示壁纸（图片直链）</h2>
+<p>默认返回 JSON；要直接在浏览器里看图、或把地址当壁纸源、<code>&lt;img&gt;</code> 地址用，加 <code>format=image</code>，接口会 302 跳到所选尺寸的图片直链。</p>
+<pre><code>GET ${SITE_URL}/api?size=4k&amp;format=image
+GET ${SITE_URL}/api?size=phone&amp;format=image</code></pre>
+<h2>返回示例</h2>
+<p>返回 JSON；顶层 <code>url</code> 即所选尺寸的图片直链，<code>sizes</code> 里是全部可用尺寸。</p>
+<pre><code>${esc(JSON.stringify(sample, null, 2))}</code></pre>
+<h2>说明</h2>
+<ul>
+<li>数据每日从 Bing 官方接口拉取更新，接口返回的永远是当日最新一张。</li>
+<li>接口支持跨域调用（CORS 已开放），响应缓存 5 分钟。</li>
+<li>2016–2018 年的老图只有桌面一档，请求别的尺寸会回落到桌面并在返回的 <code>size</code> 里注明实际尺寸；但接口只返回当日最新图，所以一般都有全部尺寸。</li>
+</ul>
+</main>`;
+  return shell({ title: `API 接口文档 - ${SITE_NAME}`, desc: '每日必应壁纸公开 API：获取当日最新壁纸，支持按尺寸选择。', ambient: TODAY.url, body });
 }
 
 // ---------- 生成 ----------
@@ -353,6 +381,9 @@ write('index.html', shell({
   ambient: TODAY.url, body: homeBody,
 }));
 
+// API 接口文档页
+write('api.html', apiDocPage());
+
 // 列表页（每页 24 张；第 1 页为 wall.html，其余 wall-N.html；curated / hot 同理）
 function buildList(kind, title, items) {
   const totalPages = Math.max(1, Math.ceil(items.length / PER_PAGE));
@@ -375,6 +406,7 @@ all.forEach((w, i) => {
 
 // 样式与图标
 copyFileSync(join(ROOT, 'styles.css'), join(DIST, 'styles.css'));
+copyFileSync(join(ROOT, 'app.js'), join(DIST, 'app.js'));
 for (const f of ['logo.svg', 'favicon.svg', 'favicon.png', 'apple-touch-icon.png', '681e774932fc7fc7913adc91d4c1dc4d.txt']) {
   copyFileSync(join(ROOT, f), join(DIST, f));
 }
@@ -392,6 +424,18 @@ ${all.map(w => `<url><loc>${SITE_URL}/bing/${w.id}.html</loc><lastmod>${w.date}<
 </urlset>
 `;
 write('sitemap.xml', sitemap);
+
+// 公开 API 数据：/api（边缘函数）读取此文件后按 size 参数返回
+// 每次构建都重新生成，所以永远是最新一张图；老图只有 desktop 一档。
+mkdirSync(join(DIST, 'data'), { recursive: true });
+write('data/latest.json', JSON.stringify({
+  date: TODAY.date,
+  title: TODAY.title,
+  copyright: TODAY.copyright,
+  copyrightlink: TODAY.copyrightlink,
+  detail: `${SITE_URL}/bing/${TODAY.id}.html`,
+  sizes: apiSizes(TODAY),
+}, null, 2));
 
 // ---------- 统计 ----------
 const bimgCount = all.filter(w => !isBing(w)).length;
