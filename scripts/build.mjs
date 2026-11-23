@@ -56,10 +56,12 @@ function baseOf(w) {
 }
 const isBing = w => w.url.includes('www.bing.com');
 // 图片地址换成本站域名（走边缘函数代理回源，不再直连 bing.com / bimg.cc）
-// bing: https://www.bing.com/th?id=X → /th?id=X
+// bing: https://www.bing.com/th?id=X → /th/每日必应壁纸.jpg?id=X
+//   （路径最后一段放站名，浏览器直接打开图片时标题显示站名；id 在查询参数里，th.js 优先读它）
 // bimg: https://cdn.bimg.cc/bing/2016/X.jpg → /mirror/bing/2016/X.jpg
+const SITE_NAME_ENCODED = '%E6%AF%8F%E6%97%A5%E5%BF%85%E5%BA%94%E5%A3%81%E7%BA%B8';
 function siteImg(url) {
-  if (url.startsWith('https://www.bing.com/th')) return url.replace('https://www.bing.com/th', '/th');
+  if (url.startsWith('https://www.bing.com/th')) return url.replace('https://www.bing.com/th?id=', `/th/${SITE_NAME_ENCODED}?id=`);
   if (url.startsWith('https://cdn.bimg.cc/')) return url.replace('https://cdn.bimg.cc/', '/mirror/');
   return url;
 }
